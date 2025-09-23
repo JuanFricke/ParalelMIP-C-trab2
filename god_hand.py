@@ -13,9 +13,6 @@ CSV_PATH = "spotify_millsongdata.csv"
 
 df = pandas.read_csv(CSV_PATH)
 
-# print(df["text"][0])
-# print(touch_of_midas(df["text"][0]))
-
 df["text"] = df["text"].apply(touch_of_midas)
 df = df.drop(columns=["link"])
 
