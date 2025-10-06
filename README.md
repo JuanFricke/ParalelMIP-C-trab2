@@ -1,28 +1,49 @@
-# Tutorial de Execução do Projeto
+# 🎵 Análise de Música com MPI
 
-## 1. Criação do Ambiente Virtual (venv)
+Análise paralela de música usando MPI para processar 57.650 músicas com:
+- **Contagem de palavras** (40% da nota)
+- **Análise de artistas** (40% da nota)  
+- **Classificação de sentimento** (20% da nota)
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-## 2. Instalação das Dependências
+## 🚀 Execução
 
 ```bash
-pip install -r requirements.txt
+# Executar análise completa com 14 processos MPI
+./run_analysis.sh
+
+# Executar benchmark (paralelo vs single thread)
+./benchmark_simple.sh
 ```
 
-## 3. Execução do `god_hand.py` para Gerar o CSV
+## 📊 Configurações
 
-```bash
-python god_hand.py
+- **Músicas**: 57.650
+- **Processos**: 14 MPI (forçado com --oversubscribe)
+- **Chunks**: 100 músicas cada
+- **LLM**: 100 músicas para classificação
+- **Progresso**: Visível a cada 10 chunks
+
+## 📁 Arquivos Essenciais
+
+- `music_analysis.c` - Programa principal
+- `ollama_client.c/h` - Cliente para LLM
+- `helper.c/h` - Funções auxiliares
+- `golden_music.csv` - Dados das músicas
+- `Makefile` - Compilação
+- `run_analysis.sh` - Script de execução
+
+## 🔧 Requisitos
+
+- OpenMPI
+- libcurl
+- json-c
+- Ollama (para classificação de sentimento)
+
+## 📈 Progresso
+
+O programa mostra progresso em tempo real:
+```
+Word counting: 1000/57650 songs processed (1.7%) - Chunk 10/577
+Artist analysis: 1000/57650 songs processed (1.7%) - Chunk 10/577
 ```
 
-O arquivo CSV será gerado automaticamente na pasta do projeto após a execução.
-
-## Observações
-
-- Certifique-se de que o Python 3 está instalado.
-- Ative o ambiente virtual antes de executar qualquer script.
-- Caso o arquivo `requirements.txt` não exista, instale manualmente as dependências necessárias.

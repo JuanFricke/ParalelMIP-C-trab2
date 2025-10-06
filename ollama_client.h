@@ -1,116 +1,96 @@
 #ifndef OLLAMA_CLIENT_H
 #define OLLAMA_CLIENT_H
 
-#define _GNU_SOURCE  // Enable strdup and other GNU extensions
+#define _GNU_SOURCE  // Habilita strdup e outras extensões GNU
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <curl/curl.h>
+// Inclusão das bibliotecas necessárias
+#include <stdio.h>    // Para entrada e saída padrão
+#include <stdlib.h>   // Para funções de alocação de memória
+#include <string.h>   // Para manipulação de strings
+#include <curl/curl.h>  // Para requisições HTTP
 
-// Ollama API endpoint (default local)
+// Endpoint da API do Ollama (padrão local)
 #define OLLAMA_DEFAULT_URL "http://localhost:11434"
 
-// Response structure for Ollama API
+// Estrutura para resposta da API do Ollama
 typedef struct {
-    char *response;      // The actual response text
-    char *model;         // Model used
-    int done;            // Whether the response is complete
-    char *error;         // Error message if any
-    size_t response_len; // Length of response
+    char *response;      // O texto da resposta real
+    char *model;         // Modelo usado para gerar a resposta
+    int done;            // Se a resposta está completa
+    char *error;         // Mensagem de erro se houver
+    size_t response_len; // Tamanho da resposta
 } OllamaResponse;
 
-// Request structure for Ollama API
+// Estrutura para requisição à API do Ollama
 typedef struct {
-    char *model;         // Model to use (e.g., "llama2", "codellama")
-    char *prompt;        // Input prompt
-    int stream;          // Whether to stream the response
-    char *format;        // Response format (optional)
+    char *model;         // Modelo a usar (ex: "llama2", "codellama")
+    char *prompt;        // Prompt de entrada
+    int stream;          // Se deve fazer streaming da resposta
+    char *format;        // Formato da resposta (opcional)
 } OllamaRequest;
 
-// Configuration structure
+// Estrutura de configuração
 typedef struct {
-    char *url;           // Ollama server URL
-    int timeout;         // Request timeout in seconds
-    int verbose;         // Verbose logging
+    char *url;           // URL do servidor Ollama
+    int timeout;         // Timeout da requisição em segundos
+    int verbose;         // Log verboso
 } OllamaConfig;
 
-// Function declarations
+// Declarações das funções
 
 /**
- * Initialize Ollama configuration with default values
- * @return Pointer to allocated OllamaConfig structure
+ * Inicializa a configuração do Ollama com valores padrão
+ * @return Ponteiro para estrutura OllamaConfig alocada
  */
 OllamaConfig* ollama_config_init(void);
 
 /**
- * Free Ollama configuration memory
- * @param config Pointer to OllamaConfig to free
+ * Libera a memória da configuração do Ollama
+ * @param config Ponteiro para OllamaConfig a ser liberado
  */
 void ollama_config_free(OllamaConfig *config);
 
 /**
- * Initialize Ollama request structure
- * @param model Model name to use
- * @param prompt Input prompt
- * @return Pointer to allocated OllamaRequest structure
- */
-OllamaRequest* ollama_request_init(const char *model, const char *prompt);
-
-/**
- * Free Ollama request memory
- * @param request Pointer to OllamaRequest to free
+ * Libera a memória da requisição do Ollama
+ * @param request Ponteiro para OllamaRequest a ser liberado
  */
 void ollama_request_free(OllamaRequest *request);
 
 /**
- * Initialize Ollama response structure
- * @return Pointer to allocated OllamaResponse structure
+ * Inicializa a estrutura de resposta do Ollama
+ * @return Ponteiro para estrutura OllamaResponse alocada
  */
 OllamaResponse* ollama_response_init(void);
 
 /**
- * Free Ollama response memory
- * @param response Pointer to OllamaResponse to free
+ * Libera a memória da resposta do Ollama
+ * @param response Ponteiro para OllamaResponse a ser liberado
  */
 void ollama_response_free(OllamaResponse *response);
 
 /**
- * Send a request to Ollama and get response
- * @param config Ollama configuration
- * @param request Request to send
- * @param response Response structure to fill
- * @return 0 on success, -1 on error
+ * Envia uma requisição para o Ollama e obtém a resposta
+ * @param config Configuração do Ollama
+ * @param request Requisição a ser enviada
+ * @param response Estrutura de resposta a ser preenchida
+ * @return 0 em caso de sucesso, -1 em caso de erro
  */
 int ollama_send_request(const OllamaConfig *config, 
                        const OllamaRequest *request, 
                        OllamaResponse *response);
 
 /**
- * Print Ollama response in a formatted way
- * @param response Response to print
- */
-void ollama_print_response(const OllamaResponse *response);
-
-/**
- * Check if Ollama server is running
- * @param config Ollama configuration
- * @return 1 if running, 0 if not
- */
-int ollama_check_server(const OllamaConfig *config);
-
-/**
- * Initialize Ollama request for sentiment classification of music lyrics
- * @param model Model name to use
- * @param lyrics Music lyrics to classify
- * @return Pointer to allocated OllamaRequest structure with pre-prompt
+ * Inicializa requisição do Ollama para classificação de sentimento de letras de música
+ * @param model Nome do modelo a usar
+ * @param lyrics Letras da música a classificar
+ * @return Ponteiro para estrutura OllamaRequest alocada com prompt pré-definido
  */
 OllamaRequest* ollama_request_init_classification(const char *model, const char *lyrics);
 
 /**
- * Simple function to classify lyrics sentiment
- * @param lyrics Music lyrics to classify
- * @return Classification result: "Positive", "Neutral", or "Negative"
+ * Função simplificada para classificar o sentimento das letras
+ * @param lyrics Letras da música a classificar
+ * @return Resultado da classificação: "0" (Positivo), "1" (Neutro), ou "2" (Negativo)
  */
 char* classify_lyrics(const char *lyrics);
 
