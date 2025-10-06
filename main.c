@@ -57,7 +57,7 @@ int main() {
     // Test 4: Bunda Lyrics
     printf("Test 4: Bunda Lyrics\n");
     printf("-----------------------\n");
-    const char *bad_lyrics = "funcking good pussy eating BUCETAAAAAAAAAAAA MERDA TURBAAAAAAAAAAAAAAA shake ass pussy fuck pussy boobs";
+    const char *bad_lyrics = "funcking good pussy eating i use weed and smoke crack and fuck pussy boobs";
     
     printf("Lyrics: %s\n", bad_lyrics);
     result = classify_lyrics(bad_lyrics);
