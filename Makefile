@@ -1,66 +1,59 @@
+# Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -std=gnu99 -g
+CFLAGS = -Wall -Wextra -std=gnu99 -O3 -march=native -mtune=native -funroll-loops -ffast-math
 LIBS = -lcurl -ljson-c
 MPI_CC = mpicc
-MPI_CFLAGS = -Wall -Wextra -std=gnu99 -g
+MPI_CFLAGS = -Wall -Wextra -std=gnu99 -O3 -march=native -mtune=native -funroll-loops -ffast-math
 MPI_LIBS = -lcurl -ljson-c
 
 # Targets
 TARGET = ollama_client
-HELPER_TARGET = example_helper
-HELPER_LIB = libhelper.a
+MAIN_TARGET = main
 
 # Sources
-SOURCES = main.c ollama_client.c
-HELPER_SOURCES = helper.c
-HELPER_OBJECTS = helper.o
+SOURCES = ollama_client.c
+MAIN_SOURCES = main.c ollama_client.c
 
 # Default target
-all: $(TARGET)
+all: $(TARGET) $(MAIN_TARGET)
 
-# Build the main executable
+# Build the ollama client executable
 $(TARGET): $(SOURCES)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) $(LIBS)
 
-# Build helper library
-$(HELPER_LIB): $(HELPER_OBJECTS)
-	ar rcs $(HELPER_LIB) $(HELPER_OBJECTS)
-
-# Build helper object file
-$(HELPER_OBJECTS): $(HELPER_SOURCES)
-	$(MPI_CC) $(MPI_CFLAGS) -c $(HELPER_SOURCES) -o $(HELPER_OBJECTS)
-
-# Build example helper program
-$(HELPER_TARGET): example_helper.c $(HELPER_LIB)
-	$(MPI_CC) $(MPI_CFLAGS) -o $(HELPER_TARGET) example_helper.c -L. -lhelper $(MPI_LIBS)
+# Build main MPI program
+$(MAIN_TARGET): $(MAIN_SOURCES)
+	export PATH=/usr/lib64/openmpi/bin:$$PATH && $(MPI_CC) $(MPI_CFLAGS) -o $(MAIN_TARGET) $(MAIN_SOURCES) $(MPI_LIBS)
 
 # Clean build artifacts
 clean:
-	rm -f $(TARGET) $(HELPER_TARGET) $(HELPER_LIB) *.o
+	rm -f $(TARGET) $(MAIN_TARGET) *.o
 
 # Install dependencies (Ubuntu/Debian)
 install-deps:
 	sudo apt-get update
 	sudo apt-get install -y libcurl4-openssl-dev libjson-c-dev libopenmpi-dev
 
-# Install dependencies (Fedora/RHEL)
-install-deps-fedora:
-	sudo dnf install -y libcurl-devel json-c-devel openmpi-devel
+# Run the main program with 14 processes
+run: $(MAIN_TARGET)
+	export PATH=/usr/lib64/openmpi/bin:$$PATH && mpirun -np 14 --oversubscribe ./$(MAIN_TARGET)
 
-# Run the program
-run: $(TARGET)
-	./$(TARGET)
+# Run with 1 process (single thread)
+run-single: $(MAIN_TARGET)
+	export PATH=/usr/lib64/openmpi/bin:$$PATH && mpirun -np 1 ./$(MAIN_TARGET)
 
-# Run helper example with MPI
-run-helper: $(HELPER_TARGET)
-	mpirun -np 4 ./$(HELPER_TARGET)
+# Quick benchmark
+benchmark: $(MAIN_TARGET)
+	@echo "🏁 Quick Benchmark: Parallel vs Single Thread"
+	@echo "============================================="
+	@echo "Testing with 1000 songs..."
+	@echo ""
+	@echo "🚀 Running parallel (14 processes)..."
+	@timeout 60s bash -c 'export PATH=/usr/lib64/openmpi/bin:$$PATH && time mpirun -np 14 --oversubscribe ./$(MAIN_TARGET) > /dev/null 2>&1' || echo "Parallel execution completed or timed out"
+	@echo ""
+	@echo "🐌 Running single thread (1 process)..."
+	@timeout 60s bash -c 'export PATH=/usr/lib64/openmpi/bin:$$PATH && time mpirun -np 1 ./$(MAIN_TARGET) > /dev/null 2>&1' || echo "Single thread execution completed or timed out"
+	@echo ""
+	@echo "✅ Benchmark completed!"
 
-# Debug build
-debug: CFLAGS += -DDEBUG -O0
-debug: $(TARGET)
-
-# Release build
-release: CFLAGS += -O2 -DNDEBUG
-release: $(TARGET)
-
-.PHONY: all clean install-deps install-deps-fedora run run-helper debug release
+.PHONY: all clean install-deps run run-single benchmark
