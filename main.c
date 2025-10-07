@@ -7,12 +7,12 @@
 #include "ollama_client.h"  // Para comunicação com o modelo de IA Ollama
 
 // Definições de constantes para limites de tamanho
-#define MAX_LINE_LENGTH 10000    // Tamanho máximo de uma linha do CSV
+#define MAX_LINE_LENGTH 100000    // Tamanho máximo de uma linha do CSV
 #define MAX_WORD_LENGTH 100      // Tamanho máximo de uma palavra
 #define MAX_ARTIST_LENGTH 200    // Tamanho máximo do nome do artista
 #define MAX_SONG_LENGTH 200      // Tamanho máximo do nome da música
-#define MAX_TEXT_LENGTH 5000     // Tamanho máximo do texto da letra
-#define MAX_WORDS 50000          // Número máximo de palavras únicas
+#define MAX_TEXT_LENGTH 10000     // Tamanho máximo do texto da letra
+#define MAX_WORDS 50000000          // Número máximo de palavras únicas
 #define MAX_ARTISTS 5000         // Número máximo de artistas únicos
 #define MAX_LLM_SONGS 200        // Número máximo de músicas para análise de sentimento
 #define IO_BUFFER_SIZE 1024 * 1024  // Buffer de 1MB para otimização de I/O
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     // Obtém o número total de músicas (apenas o processo 0)
     int total_songs = 0;
     if (world_rank == 0) {
-        total_songs = count_csv_lines("golden_music.csv");
+        total_songs = count_csv_lines("test_music.csv");
         if (total_songs <= 0) {
             printf("Erro: Não foi possível ler o arquivo CSV ou o arquivo está vazio\n");
             MPI_Abort(MPI_COMM_WORLD, 1);  // Termina todos os processos se houver erro
@@ -92,26 +92,26 @@ int main(int argc, char* argv[]) {
         artist_counts = (ArtistCount*)malloc(MAX_ARTISTS * sizeof(ArtistCount));
     }
     
-    // 1. Contagem de Palavras (40% da nota) - Análise paralela
+    // 1. Contagem de Palavras - Análise paralela
     if (world_rank == 0) {
-        printf("\n1. Análise de Contagem de Palavras (40%% da nota) - \n");
+        printf("\n1. Análise de Contagem de Palavras - \n");
         printf("=======================================================\n");
     }
-    count_words_io_optimized("golden_music.csv", total_songs, word_counts, &num_words, world_rank, world_size);
+    count_words_io_optimized("test_music.csv", total_songs, word_counts, &num_words, world_rank, world_size);
     
-    // 2. Análise de Artistas (40% da nota) - Contagem paralela
+    // 2. Análise de Artistas - Contagem paralela
     if (world_rank == 0) {
-        printf("\n2. Análise de Artistas (40%% da nota) - \n");
+        printf("\n2. Análise de Artistas - \n");
         printf("===============================================\n");
     }
-    count_artists_io_optimized("golden_music.csv", total_songs, artist_counts, &num_artists, world_rank, world_size);
+    count_artists_io_optimized("test_music.csv", total_songs, artist_counts, &num_artists, world_rank, world_size);
     
-    // 3. Classificação de Sentimento (20% da nota) - Usando IA
+    // 3. Classificação de Sentimento - Usando IA
     if (world_rank == 0) {
-        printf("\n3. Classificação de Sentimento (20%% da nota) - \n");
+        printf("\n3. Classificação de Sentimento - \n");
         printf("========================================================\n");
     }
-    classify_sentiments_io_optimized("golden_music.csv", total_songs, sentiment_counts, world_rank, world_size);
+    classify_sentiments_io_optimized("test_music.csv", total_songs, sentiment_counts, world_rank, world_size);
     
     // Imprime os resultados (apenas o processo 0)
     if (world_rank == 0) {
@@ -538,21 +538,21 @@ void print_results(WordCount* word_counts, int num_words, ArtistCount* artist_co
     printf("FINAL RESULTS SUMMARY - \n");
     printf("========================================\n");
     
-    printf("\n1. WORD COUNTING (40%% of grade):\n");
+    printf("\n1. WORD COUNTING:\n");
     printf("Total unique words found: %d\n", num_words);
     printf("Top 10 most frequent words:\n");
     for (int i = 0; i < 10 && i < num_words; i++) {
         printf("  %d. %s: %d occurrences\n", i + 1, word_counts[i].word, word_counts[i].count);
     }
     
-    printf("\n2. ARTIST ANALYSIS (40%% of grade):\n");
+    printf("\n2. ARTIST ANALYSIS:\n");
     printf("Total unique artists found: %d\n", num_artists);
     printf("Top 10 artists with most songs:\n");
     for (int i = 0; i < 10 && i < num_artists; i++) {
         printf("  %d. %s: %d songs\n", i + 1, artist_counts[i].artist, artist_counts[i].song_count);
     }
     
-    printf("\n3. SENTIMENT CLASSIFICATION (20%% of grade):\n");
+    printf("\n3. SENTIMENT CLASSIFICATION:\n");
     printf("Positive: %d songs\n", sentiment_counts[0]);
     printf("Neutral: %d songs\n", sentiment_counts[1]);
     printf("Negative: %d songs\n", sentiment_counts[2]);
